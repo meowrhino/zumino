@@ -1,0 +1,18 @@
+con este .json, siguiendo algunas modificaciones al mismo, me gustaria que preparases el .js para una página que sería mas o menos una pagina que sera en esencia de varios slideshows:
+
+tamaño 100dvw y 100dvh de la pagina, y cada esquina mas o menos tiene un elemento que se rellena a partir el data.json
+ que tenga arriba a la derecha un contador de la diapositiva en la que estas y el total de ese slideshow (en posicion fija top right)
+que tenga top left el titulo y la fecha con el formato titulo, fecha en h2 y bajo ellos el texto en <p> (uno por cada item del array) (tiene que ser un array esto) y que ambos esten en un contenedor que ocupe el 30% en ordenador y el 40% en movil del ancho de la pantalla y el height que necesiten. que este contenedor sea un flex flex-column y asi podamos poner un gap entre el div que contenga lo que sea en h2 y el que contenga los <p>'s
+y que abajo a la izquierda y a la derecha tenga unos botones que no parezcan botones sino sean textos que cuando haces hover cambien de color (pueden ser un h3, por ejemplo) y que digan "[] anterior" y "siguiente []" y eso se rellene en funcion de si vas a un siguiente slide, o si cambias a un otro slideshow (que por ahora sea "pagina" si vas al slide y "proyecto" si cambias de slideshow
+el slideshow es un bucle: se abre siempre por la 1a slide del 1er slideshow (entre slug y slides deberia haber un "orden" tambien :P para ordenar bien eso)
+recuerda que cada elemento tenga su clase en css y sea comprensible 
+
+es demasiado? crees que puedes? yo creo que puedes >:) no te comas mucho el coco con el CSS tan solo haz lo que te he dicho y que este bien preparado, para fuente usa una serif cualquiera y los tamaños preparamelos en el :root con 4 clamps, uno para titulo y fecha, otro para los btoones, otro para el texto que ira en los p y otro para el contador de arriba a la derecha
+
+el contador muestra el num de la slide en la que estas y el num del ultimo slide (o el lenght de esa slide como prefieras eso, lo que sea mas elegante) y cuando cambias de slide o de slideshow se va actualizadno (vaya que toda la pagina se tiene que ir actualizando con cada slide y slideshow, asi que haz lo que sea mas elegante)
+
+recuerda que imagenes puedes poner mas de una entonces igual deberia estar en un array? no se!
+
+pensarias todo esto over y en el zip que me mandas me haces un poco un readme explicando como funciona todo? 
+
+tomate el tiempo que necesites

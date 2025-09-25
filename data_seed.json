@@ -1,0 +1,70 @@
+{
+  "título": "zumo de manzana",
+  "fecha": "2024-06-15",
+  "proyectos": [
+    {
+      "slug": "zumodemanzana",
+      "slides": [
+        {
+          "orden": 1,
+          "texto": "zumiño é un proxecto novo, liderado por persoas con ilusión e confianza no desenvolvemento rural. a nosa historia comeza en 2015, cando rehabilitamos terreos abandonados e plantamos as primeiras árbores froiteiras.",
+          "background": "img/",
+          "imagen": {
+            "url": "img/",
+            "coords": [0, 0]
+          }
+        },
+        {
+          "orden": 2,
+          "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          "background": "img/",
+          "imagen": {
+            "url": "img/",
+            "coords": [0, 0]
+          }
+        },
+        {
+          "orden": 3,
+          "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          "background": "img/",
+          "imagen": {
+            "url": "img/",
+            "coords": [0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "slug": "proyectopañuelo",
+      "slides": [
+        {
+          "orden": 1,
+          "texto": "zumiño é un proxecto novo, liderado por persoas con ilusión e confianza no desenvolvemento rural. a nosa historia comeza en 2015, cando rehabilitamos terreos abandonados e plantamos as primeiras árbores froiteiras.",
+          "background": "img/",
+          "imagen": {
+            "url": "img/",
+            "coords": [0, 0]
+          }
+        },
+        {
+          "orden": 2,
+          "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          "background": "img/",
+          "imagen": {
+            "url": "img/",
+            "coords": [0, 0]
+          }
+        },
+        {
+          "orden": 3,
+          "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          "background": "img/",
+          "imagen": {
+            "url": "img/",
+            "coords": [0, 0]
+          }
+        }
+      ]
+    }
+  ]
+}

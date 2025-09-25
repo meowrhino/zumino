@@ -39,8 +39,8 @@
       ]
     },
     {
-      "slug": "proyectopañuelo",
-      "titulo": "Proyectopañuelo",
+      "slug": "proyectopanuelo",
+      "titulo": "El pañuelo",
       "fecha": "2024-01-01",
       "slides": [
         {
@@ -74,7 +74,7 @@
           "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
           "background": "img/bg_3.svg"
         },
-         {
+        {
           "orden": 1,
           "texto": "zumiño é un proxecto novo, liderado por persoas con ilusión e confianza no desenvolvemento rural. a nosa historia comeza en 2015, cando rehabilitamos terreos abandonados e plantamos as primeiras árbores froiteiras.",
           "background": "img/bg_1.svg",

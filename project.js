@@ -1,6 +1,6 @@
 /**
- * Index — soporta /<slug> o ?p=<slug>&s=<n> para empezar en ese proyecto/slide.
- * Bucle de proyectos; counter "X/Y"; background solo por slide; solo `imagenes`.
+ * Proyecto — ruta /proyecto/<slug> o ?p=<slug>&s=<n>
+ * Solo muestra ese proyecto. Sin bucle: prev deshabilitado en primera slide, next en última.
  */
 
 const els = {
@@ -14,22 +14,20 @@ const els = {
 };
 
 let canvasEl = null;
-
-const state = { projects: [], pIndex: 0, sIndex: 0 };
+const state = { project: null, sIndex: 0 };
 
 const asArray = (v) => (Array.isArray(v) ? v : v == null ? [] : [v]);
 
 function pathSegments() {
   return location.pathname.split("/").filter(Boolean);
 }
-
 function getQuery() {
   const p = new URLSearchParams(location.search);
   return { p: p.get("p"), s: Number(p.get("s") || 0) || 0 };
 }
 
 async function loadData() {
-  const res = await fetch("data.json", { cache: "no-store" });
+  const res = await fetch("../data.json", { cache: "no-store" });
   if (!res.ok) throw new Error("No se pudo cargar data.json");
   const raw = await res.json();
   return normalize(raw);
@@ -121,7 +119,6 @@ function setBackground(slide) {
     els.app.style.backgroundImage = "none";
   }
 }
-
 function clear(el) {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
@@ -156,9 +153,13 @@ function animateRefresh() {
   els.app.classList.add("appearing");
 }
 
+function setDisabled(el, disabled) {
+  el.classList.toggle("is-disabled", !!disabled);
+  el.setAttribute("aria-disabled", disabled ? "true" : "false");
+}
+
 function render() {
-  const { projects, pIndex, sIndex } = state;
-  const project = projects[pIndex];
+  const { project, sIndex } = state;
   const slides = project.slides;
   const slide = slides[sIndex];
 
@@ -174,81 +175,54 @@ function render() {
   });
 
   els.counter.textContent = `${sIndex + 1}/${slides.length}`;
-
   setBackground(slide);
   renderImages(slide);
 
-  const prevIsProject = sIndex === 0;
-  const nextIsProject = sIndex === slides.length - 1;
-  els.prevBtn.textContent = prevIsProject
-    ? "proyecto anterior"
-    : "página anterior";
-  els.nextBtn.textContent = nextIsProject
-    ? "siguiente proyecto"
-    : "siguiente página";
+  // Deshabilitar prev/next en extremos (sin bucle)
+  setDisabled(els.prevBtn, sIndex === 0);
+  setDisabled(els.nextBtn, sIndex === slides.length - 1);
 
   animateRefresh();
 }
 
 function goPrev() {
-  const { projects, pIndex, sIndex } = state;
-  if (sIndex > 0) state.sIndex -= 1;
-  else {
-    state.pIndex = (pIndex - 1 + projects.length) % projects.length;
-    state.sIndex = projects[state.pIndex].slides.length - 1;
+  if (state.sIndex > 0) {
+    state.sIndex -= 1;
+    render();
   }
-  render();
 }
 function goNext() {
-  const { projects, pIndex, sIndex } = state;
-  const slides = projects[pIndex].slides;
-  if (sIndex < slides.length - 1) state.sIndex += 1;
-  else {
-    state.pIndex = (pIndex + 1) % projects.length;
-    state.sIndex = 0;
+  if (state.sIndex < state.project.slides.length - 1) {
+    state.sIndex += 1;
+    render();
   }
-  render();
 }
 function keyNav(e) {
   if (e.key === "ArrowLeft") goPrev();
   if (e.key === "ArrowRight") goNext();
 }
 
-function findSlugIndex(projects, slug) {
-  if (!slug) return 0;
-  const idx = projects.findIndex((p) => p.slug === slug);
-  return idx >= 0 ? idx : 0;
-}
-function detectSlugFromPath(projects) {
+function detectSlug() {
   const segs = pathSegments();
-  // Si hay 'proyecto' en ruta, no nos aplica (eso es proyecto.html).
-  const candidates = segs.filter(
-    (s) => s && s !== "proyecto" && !s.includes(".")
-  );
-  // coger el último segmento que coincida con algún slug
-  for (let i = candidates.length - 1; i >= 0; i--) {
-    const cand = candidates[i];
-    if (projects.some((p) => p.slug === cand)) return cand;
-  }
-  return null;
+  // Esperamos /proyecto/<slug> o /carpeta/proyecto/<slug>
+  const i = segs.lastIndexOf("proyecto");
+  if (i >= 0 && i < segs.length - 1) return segs[i + 1];
+  // fallback ?p=slug
+  const q = new URLSearchParams(location.search);
+  return q.get("p");
 }
 
 async function init() {
   const normalized = await loadData();
-  state.projects = normalized.projects;
+  const slug = detectSlug();
+  const proj =
+    normalized.projects.find((p) => p.slug === slug) || normalized.projects[0];
+  state.project = proj;
 
-  const q = getQuery();
-  const slugParam = q.p;
-  const slugFromPath = detectSlugFromPath(state.projects);
-  const startSlug = slugParam || slugFromPath;
-  state.pIndex = findSlugIndex(state.projects, startSlug);
-  state.sIndex =
-    q.s && Number.isFinite(q.s)
-      ? Math.max(
-          0,
-          Math.min(q.s, state.projects[state.pIndex].slides.length - 1)
-        )
-      : 0;
+  // slide inicial por ?s=N (fallback)
+  const q = new URLSearchParams(location.search);
+  const sParam = Number(q.get("s") || 0) || 0;
+  state.sIndex = Math.max(0, Math.min(sParam, state.project.slides.length - 1));
 
   canvasEl = document.createElement("div");
   canvasEl.className = "canvas";

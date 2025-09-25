@@ -1,12 +1,11 @@
 
 /**
- * Multi-Slideshows (vanilla JS) — v2
- * - Esquema raíz: { proyectos2: [ { slug, titulo, fecha, background, slides[] } ] }
- * - Top-left: muestra "titulo, año".
- * - Counter: "X/Y" (pegado).
- * - Botones: sin corchetes ("página/proyecto" según corresponda).
- * - Imágenes por slide: coords [x vw, y vh], width responsive con clamp.
- * - Transición suave (fade-in) al cambiar.
+ * Multi-Slideshows (vanilla JS) — v2.1
+ * - Background SOLO por slide (no fallback del proyecto).
+ * - Solo acepta `imagenes` (array o un único objeto/URL que se convierte a array).
+ * - Counter "X/Y".
+ * - Z-index en texto/counter/nav para que queden por encima.
+ * - JS no inyecta CSS salvo backgroundImage y position coords.
  */
 
 const els = {
@@ -49,7 +48,7 @@ function normalize(raw) {
     slug: p.slug ?? `proyecto-${idx+1}`,
     titulo: p.titulo ?? p.slug ?? `Proyecto ${idx+1}`,
     fecha: p.fecha ?? '',
-    background: p.background ?? null,
+    // background de proyecto ignorado a propósito (solo por slide)
     orden: (typeof p.orden === 'number') ? p.orden : undefined,
     slides: normalizeSlides(asArray(p.slides))
   }));
@@ -64,15 +63,25 @@ function normalize(raw) {
   return { projects };
 }
 
+function toImagenesArray(val) {
+  // Acepta: array de objetos | objeto suelto | string URL suelta
+  if (Array.isArray(val)) return val;
+  if (val == null) return [];
+  if (typeof val === 'string') return [{ url: val }];
+  if (typeof val === 'object' && val.url) return [val];
+  return [];
+}
+
 function normalizeSlides(slides) {
   const list = slides.map((s, i) => {
     const textoArr = Array.isArray(s.texto) ? s.texto : (typeof s.texto === 'string' ? [s.texto] : []);
-    const imagenes = s.imagenes ?? (s.imagen ? asArray(s.imagen) : []);
+    // Solo `imagenes` (ignora `imagen` si existiera)
+    const imagenes = toImagenesArray(s.imagenes);
     const background = s.background ?? null;
     return {
       orden: (typeof s.orden === 'number') ? s.orden : undefined,
       parrafos: textoArr,
-      imagenes: Array.isArray(imagenes) ? imagenes : asArray(imagenes),
+      imagenes,
       background
     };
   });
@@ -86,21 +95,31 @@ function normalizeSlides(slides) {
   return list;
 }
 
-function setBackground(project, slide) {
-  const pick = slide?.background ?? project?.background;
-  const src = Array.isArray(pick) ? pick[0] : pick;
+const IMAGE_EXT_RE = /\.(avif|webp|png|jpe?g|svg)$/i;
+function isValidImgPath(src) {
+  return typeof src === 'string'
+    && src.trim() !== ''
+    && !src.endsWith('/')
+    && IMAGE_EXT_RE.test(src);
+}
 
-  if (typeof src === 'string' && src.trim()) {
-    const url = src.replace(/^\.\//, ''); // limpia './' inicial por si acaso
+function pickFirstValidImage(pick) {
+  if (Array.isArray(pick)) {
+    for (const s of pick) if (isValidImgPath(s)) return s;
+    return null;
+  }
+  return isValidImgPath(pick) ? pick : null;
+}
 
-    // Preload con diagnóstico
+function setBackground(slide) {
+  // SOLO slide.background
+  const src = pickFirstValidImage(slide?.background);
+  if (src) {
+    const url = src.replace(/^\.\//, '');
     const test = new Image();
-    test.onload = () => {
-      // JSON.stringify garantiza comillas y escaping correcto dentro de url(...)
-      els.app.style.backgroundImage = `url(${JSON.stringify(url)})`;
-    };
+    test.onload = () => { els.app.style.backgroundImage = `url(${JSON.stringify(url)})`; };
     test.onerror = (e) => {
-      console.warn('[BG] No se pudo cargar el background:', url, e);
+      console.warn('[BG] No se pudo cargar el background (descartado):', url, e);
       els.app.style.backgroundImage = 'none';
     };
     test.src = url;
@@ -109,25 +128,30 @@ function setBackground(project, slide) {
   }
 }
 
-function escapeUrl(str) { return String(str).replace(/(['"()\\\s])/g, '\\$1'); }
 function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
 function renderImages(slide) {
   if (!canvasEl) return;
   clear(canvasEl);
+
   const imgs = slide.imagenes || [];
   imgs.forEach((it, idx) => {
-    const url = (it && it.url) ? it.url : null;
-    if (!url) return;
+    const url = it && it.url ? String(it.url) : '';
+    if (!isValidImgPath(url)) {
+      if (url && url.trim()) console.warn('[IMG] URL inválida descartada:', url);
+      return;
+    }
     const coords = Array.isArray(it.coords) ? it.coords : [0,0];
     const left = typeof coords[0] === 'number' ? coords[0] : parseFloat(coords[0]) || 0;
     const top  = typeof coords[1] === 'number' ? coords[1] : parseFloat(coords[1]) || 0;
+
     const img = document.createElement('img');
     img.className = 'canvas__img';
-    img.src = url;
+    img.src = url.replace(/^\.\//, '');
     img.alt = it.alt || `img-${idx+1}`;
     img.style.left = left + 'vw';
     img.style.top  = top + 'vh';
+
     canvasEl.appendChild(img);
     requestAnimationFrame(() => img.classList.add('is-visible'));
   });
@@ -162,10 +186,10 @@ function render() {
   els.counter.textContent = `${sIndex + 1}/${slides.length}`;
 
   // Fondo + imágenes
-  setBackground(project, slide);
+  setBackground(slide);
   renderImages(slide);
 
-  // Botones (sin corchetes)
+  // Botones neutros (texto ya es gris via CSS)
   const prevIsProject = (sIndex === 0);
   const nextIsProject = (sIndex === slides.length - 1);
   els.prevBtn.textContent = prevIsProject ? 'proyecto anterior' : 'página anterior';

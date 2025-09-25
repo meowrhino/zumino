@@ -1,86 +1,78 @@
 {
-  "título": "zumo de manzana",
-  "fecha": "2024-06-15",
-  "proyectos": [
+  "proyectos2": [
     {
       "slug": "zumodemanzana",
+      "titulo": "Zumodemanzana",
+      "fecha": "2024-01-01",
       "slides": [
         {
           "orden": 1,
           "texto": "zumiño é un proxecto novo, liderado por persoas con ilusión e confianza no desenvolvemento rural. a nosa historia comeza en 2015, cando rehabilitamos terreos abandonados e plantamos as primeiras árbores froiteiras.",
-          "background": "img/",
-          "imagen": {
-            "url": "img/",
-            "coords": [
-              0,
-              0
-            ]
-          }
+          "background": "img/bg_1.svg",
+          "imagenes": [
+            {
+              "url": "img/test_apple.svg",
+              "coords": [
+                88,
+                8
+              ]
+            },
+            {
+              "url": "img/test_leaf.svg",
+              "coords": [
+                9,
+                1
+              ]
+            }
+          ]
         },
         {
           "orden": 2,
           "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-          "background": "img/",
-          "imagen": {
-            "url": "img/",
-            "coords": [
-              0,
-              0
-            ]
-          }
+          "background": "img/bg_2.svg"
         },
         {
           "orden": 3,
           "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-          "background": "img/",
-          "imagen": {
-            "url": "img/",
-            "coords": [
-              0,
-              0
-            ]
-          }
+          "background": "img/bg_3.svg"
         }
       ]
     },
     {
       "slug": "proyectopañuelo",
+      "titulo": "Proyectopañuelo",
+      "fecha": "2024-01-01",
       "slides": [
         {
           "orden": 1,
           "texto": "zumiño é un proxecto novo, liderado por persoas con ilusión e confianza no desenvolvemento rural. a nosa historia comeza en 2015, cando rehabilitamos terreos abandonados e plantamos as primeiras árbores froiteiras.",
-          "background": "img/",
-          "imagen": {
-            "url": "img/",
-            "coords": [
-              0,
-              0
-            ]
-          }
+          "background": "img/bg_1.svg",
+          "imagenes": [
+            {
+              "url": "img/test_apple.svg",
+              "coords": [
+                12,
+                33
+              ]
+            },
+            {
+              "url": "img/test_leaf.svg",
+              "coords": [
+                1,
+                36
+              ]
+            }
+          ]
         },
         {
           "orden": 2,
           "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-          "background": "img/",
-          "imagen": {
-            "url": "img/",
-            "coords": [
-              0,
-              0
-            ]
-          }
+          "background": "img/bg_2.svg"
         },
         {
           "orden": 3,
           "texto": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-          "background": "img/",
-          "imagen": {
-            "url": "img/",
-            "coords": [
-              0,
-              0
-            ]
-          }
+          "background": "img/bg_3.svg"
         }
       ]
     }

@@ -1,11 +1,12 @@
+
 /**
- * Multi‑Slideshows (vanilla JS)
- * - Lee data.json (seed) y normaliza campos para admitir:
- *   - proyectos con 'orden' opcional
- *   - slides con 'orden' (se ordenan) y texto (string | string[])
- *   - background string | string[]
- *   - imagen | imagenes (array)
- * - UI en cuatro esquinas, 100dvw x 100dvh, con contador y nav
+ * Multi-Slideshows (vanilla JS) — v2
+ * - Esquema raíz: { proyectos2: [ { slug, titulo, fecha, background, slides[] } ] }
+ * - Top-left: muestra "titulo, año".
+ * - Counter: "X/Y" (pegado).
+ * - Botones: sin corchetes ("página/proyecto" según corresponda).
+ * - Imágenes por slide: coords [x vw, y vh], width responsive con clamp.
+ * - Transición suave (fade-in) al cambiar.
  */
 
 const els = {
@@ -18,21 +19,15 @@ const els = {
   nextBtn: document.getElementById('nextBtn'),
 };
 
+let canvasEl = null;
+
 const state = {
-  data: null,
   projects: [],
-  pIndex: 0,  // proyecto actual
-  sIndex: 0,  // slide actual
+  pIndex: 0,
+  sIndex: 0,
 };
 
-// Helpers
-const asArray = (v) => Array.isArray(v) ? v : (v == null ? [] : [v]);
-const byOrden = (a, b) => {
-  const ao = (typeof a.orden === 'number') ? a.orden : Infinity;
-  const bo = (typeof b.orden === 'number') ? b.orden : Infinity;
-  if (ao !== bo) return ao - bo;
-  return 0;
-};
+const asArray = v => Array.isArray(v) ? v : (v == null ? [] : [v]);
 
 async function loadData() {
   const res = await fetch('data.json', { cache: 'no-store' });
@@ -41,32 +36,38 @@ async function loadData() {
   return normalize(raw);
 }
 
-function normalize(raw) {
-  const titulo = raw['título'] ?? raw['titulo'] ?? '';
-  const fecha  = raw['fecha'] ?? '';
-  const proyectos = asArray(raw.proyectos).map((p, idx) => ({
-    ...p,
-    _originalIndex: idx
-  }));
+function getYearOnly(s) {
+  if (!s || typeof s !== 'string') return '';
+  const m = s.match(/\d{4}/);
+  return m ? m[0] : '';
+}
 
-  // ordenar proyectos por 'orden' si existe, si no, por su índice original
-  const sortedProjects = [...proyectos].sort((a, b) => {
-    const ao = (typeof a.orden === 'number') ? a.orden : a._originalIndex + 1;
-    const bo = (typeof b.orden === 'number') ? b.orden : b._originalIndex + 1;
-    return ao - bo;
-  }).map(p => ({
-    slug: p.slug ?? `proyecto-${p._originalIndex+1}`,
-    orden: typeof p.orden === 'number' ? p.orden : undefined,
+function normalize(raw) {
+  const proyectos = asArray(raw.proyectos2 ?? raw.proyectos ?? []);
+
+  const projects = proyectos.map((p, idx) => ({
+    slug: p.slug ?? `proyecto-${idx+1}`,
+    titulo: p.titulo ?? p.slug ?? `Proyecto ${idx+1}`,
+    fecha: p.fecha ?? '',
+    background: p.background ?? null,
+    orden: (typeof p.orden === 'number') ? p.orden : undefined,
     slides: normalizeSlides(asArray(p.slides))
   }));
 
-  return { titulo, fecha, projects: sortedProjects };
+  projects.forEach((p, i) => p._i = i);
+  projects.sort((a, b) => {
+    const ao = (typeof a.orden === 'number') ? a.orden : a._i + 1;
+    const bo = (typeof b.orden === 'number') ? b.orden : b._i + 1;
+    return ao - bo;
+  });
+  projects.forEach(p => delete p._i);
+  return { projects };
 }
 
 function normalizeSlides(slides) {
-  const list = slides.map(s => {
+  const list = slides.map((s, i) => {
     const textoArr = Array.isArray(s.texto) ? s.texto : (typeof s.texto === 'string' ? [s.texto] : []);
-    const imagenes = s.imagenes ?? (s.imagen ? asArray(s.imagen) : (s.imagenes ?? []));
+    const imagenes = s.imagenes ?? (s.imagen ? asArray(s.imagen) : []);
     const background = s.background ?? null;
     return {
       orden: (typeof s.orden === 'number') ? s.orden : undefined,
@@ -75,42 +76,81 @@ function normalizeSlides(slides) {
       background
     };
   });
-
-  // ordenar slides por 'orden' si existe (mantener orden de entrada si no)
-  const withIndex = list.map((s, i) => ({ ...s, _i: i }));
-  withIndex.sort((a, b) => {
+  list.forEach((s, i) => s._i = i);
+  list.sort((a, b) => {
     const ao = (typeof a.orden === 'number') ? a.orden : a._i + 1;
     const bo = (typeof b.orden === 'number') ? b.orden : b._i + 1;
     return ao - bo;
   });
-  return withIndex.map(({ _i, ...rest }) => rest);
+  list.forEach(s => delete s._i);
+  return list;
 }
 
-function setBackground(slide) {
-  // background puede ser string o array -> cogemos el primero si es array
-  const bg = Array.isArray(slide.background) ? slide.background[0] : slide.background;
-  if (typeof bg === 'string' && bg.trim() !== '') {
-    els.app.style.backgroundImage = `url('${cssEscape(bg)}')`;
+function setBackground(project, slide) {
+  const pick = slide?.background ?? project?.background;
+  const src = Array.isArray(pick) ? pick[0] : pick;
+
+  if (typeof src === 'string' && src.trim()) {
+    const url = src.replace(/^\.\//, ''); // limpia './' inicial por si acaso
+
+    // Preload con diagnóstico
+    const test = new Image();
+    test.onload = () => {
+      // JSON.stringify garantiza comillas y escaping correcto dentro de url(...)
+      els.app.style.backgroundImage = `url(${JSON.stringify(url)})`;
+    };
+    test.onerror = (e) => {
+      console.warn('[BG] No se pudo cargar el background:', url, e);
+      els.app.style.backgroundImage = 'none';
+    };
+    test.src = url;
   } else {
     els.app.style.backgroundImage = 'none';
   }
 }
 
-// Nota: pequeño escape para URLs
-function cssEscape(str) {
-  return str.replace(/(["'()\\\s])/g, '\\$1');
+function escapeUrl(str) { return String(str).replace(/(['"()\\\s])/g, '\\$1'); }
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+function renderImages(slide) {
+  if (!canvasEl) return;
+  clear(canvasEl);
+  const imgs = slide.imagenes || [];
+  imgs.forEach((it, idx) => {
+    const url = (it && it.url) ? it.url : null;
+    if (!url) return;
+    const coords = Array.isArray(it.coords) ? it.coords : [0,0];
+    const left = typeof coords[0] === 'number' ? coords[0] : parseFloat(coords[0]) || 0;
+    const top  = typeof coords[1] === 'number' ? coords[1] : parseFloat(coords[1]) || 0;
+    const img = document.createElement('img');
+    img.className = 'canvas__img';
+    img.src = url;
+    img.alt = it.alt || `img-${idx+1}`;
+    img.style.left = left + 'vw';
+    img.style.top  = top + 'vh';
+    canvasEl.appendChild(img);
+    requestAnimationFrame(() => img.classList.add('is-visible'));
+  });
+}
+
+function animateRefresh() {
+  els.app.classList.remove('appearing');
+  void els.app.offsetWidth;
+  els.app.classList.add('appearing');
 }
 
 function render() {
-  const { projects, pIndex, sIndex, data } = state;
+  const { projects, pIndex, sIndex } = state;
   const project = projects[pIndex];
   const slides = project.slides;
   const slide  = slides[sIndex];
 
-  // Top-left: Título, fecha, párrafos
-  els.title.textContent = data.titulo ? data.titulo : '';
-  els.date.textContent  = data.fecha ? data.fecha : '';
+  // Top-left: "titulo, año"
+  const year = getYearOnly(project.fecha);
+  els.title.textContent = year ? `${project.titulo}, ${year}` : project.titulo;
+  if (els.date) els.date.textContent = '';
 
+  // Texto del slide
   els.paragraphs.innerHTML = '';
   slide.parrafos.forEach(t => {
     const p = document.createElement('p');
@@ -118,26 +158,26 @@ function render() {
     els.paragraphs.appendChild(p);
   });
 
-  // Top-right: Contador
-  els.counter.textContent = `Slide ${sIndex + 1} / ${slides.length} — “${project.slug}”`;
+  // Counter "X/Y"
+  els.counter.textContent = `${sIndex + 1}/${slides.length}`;
 
-  // Fondo
-  setBackground(slide);
+  // Fondo + imágenes
+  setBackground(project, slide);
+  renderImages(slide);
 
-  // Nav labels dinámicas (página vs proyecto)
+  // Botones (sin corchetes)
   const prevIsProject = (sIndex === 0);
   const nextIsProject = (sIndex === slides.length - 1);
+  els.prevBtn.textContent = prevIsProject ? 'proyecto anterior' : 'página anterior';
+  els.nextBtn.textContent = nextIsProject ? 'siguiente proyecto' : 'siguiente página';
 
-  els.prevBtn.textContent = prevIsProject ? '[proyecto] anterior' : '[página] anterior';
-  els.nextBtn.textContent = nextIsProject ? 'siguiente [proyecto]' : 'siguiente [página]';
+  animateRefresh();
 }
 
 function goPrev() {
   const { projects, pIndex, sIndex } = state;
-  if (sIndex > 0) {
-    state.sIndex -= 1; // página
-  } else {
-    // proyecto anterior
+  if (sIndex > 0) state.sIndex -= 1;
+  else {
     const prevP = (pIndex - 1 + projects.length) % projects.length;
     state.pIndex = prevP;
     state.sIndex = projects[prevP].slides.length - 1;
@@ -148,10 +188,8 @@ function goPrev() {
 function goNext() {
   const { projects, pIndex, sIndex } = state;
   const slides = projects[pIndex].slides;
-  if (sIndex < slides.length - 1) {
-    state.sIndex += 1; // página
-  } else {
-    // siguiente proyecto
+  if (sIndex < slides.length - 1) state.sIndex += 1;
+  else {
     const nextP = (pIndex + 1) % projects.length;
     state.pIndex = nextP;
     state.sIndex = 0;
@@ -165,12 +203,15 @@ function keyNav(e) {
 }
 
 async function init() {
-  state.data = await loadData();
-  state.projects = state.data.projects;
+  const normalized = await loadData();
+  state.projects = normalized.projects;
   state.pIndex = 0;
   state.sIndex = 0;
 
-  // Eventos
+  canvasEl = document.createElement('div');
+  canvasEl.className = 'canvas';
+  els.app.appendChild(canvasEl);
+
   els.prevBtn.addEventListener('click', goPrev);
   els.nextBtn.addEventListener('click', goNext);
   window.addEventListener('keydown', keyNav);
@@ -180,5 +221,5 @@ async function init() {
 
 init().catch(err => {
   console.error(err);
-  els.counter.textContent = 'Error cargando data.json';
+  if (els.counter) els.counter.textContent = 'Error cargando data.json';
 });

@@ -35,6 +35,12 @@ body {
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
+  transition: opacity .28s ease;
+}
+.app.appearing { animation: app-fade-in .28s ease both; }
+@keyframes app-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* TOP LEFT */
@@ -46,34 +52,25 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  pointer-events: none; /* evita capturar clicks por encima de fondo; los textos igual no son interactivos */
+  pointer-events: none;
 }
-@media (max-width: 900px) {
-  .info { width: 40%; }
-}
+@media (max-width: 900px) { .info { width: 40%; } }
+
 .info__header { display: flex; flex-direction: column; gap: .3rem; }
 .info__title, .info__date { margin: 0; font-size: var(--fs-title-date); line-height: 1.05; }
 .info__title { font-weight: 700; }
 .info__date { font-weight: 400; color: var(--muted); }
-.info__body p {
-  margin: 0 0 .8rem 0;
-  font-size: var(--fs-paragraph);
-  line-height: 1.35;
-}
+.info__body p { margin: 0 0 .8rem 0; font-size: var(--fs-paragraph); line-height: 1.35; }
 
-/* TOP RIGHT COUNTER */
+/* TOP RIGHT COUNTER — igual que el título, pegado */
 .counter {
   position: fixed;
   top: 2.5dvh;
   right: 2.5dvw;
-  font-size: var(--fs-counter);
-  /* letter-spacing: .03em;
-  text-transform: uppercase;
-  background: rgba(255,255,255,.6);
-  backdrop-filter: blur(2px);
-  padding: .35rem .55rem;
-  border-radius: .4rem;
-  border: 1px solid rgba(0,0,0,.08); */
+  font-size: var(--fs-title-date);
+  line-height: 1.05;
+  font-weight: 700;
+  /* minimal, sin extras para que se vea "pegado" */
 }
 
 /* BOTTOM NAV */
@@ -98,3 +95,19 @@ body {
 .nav__btn--next { color: var(--accent-2); }
 .nav__btn:hover { color: #000; }
 .nav__btn:active { opacity: .7; }
+
+/* CANVAS: imágenes posicionadas por coords [vw, vh] */
+.canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.canvas__img {
+  position: absolute;
+  width: clamp(120px, 22vw, 420px);
+  height: auto;
+  opacity: 0;
+  transition: opacity .3s ease, transform .3s ease;
+  will-change: transform, opacity;
+}
+.canvas__img.is-visible { opacity: 1; }
